@@ -1,0 +1,14 @@
+{
+  "name": "aurelia-chat-ai",
+  "version": "1.0.0",
+  "description": "Aurelia — chatbot AI premium untuk Vercel",
+  "main": "index.js",
+  "private": true,
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node index.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

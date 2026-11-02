@@ -1,0 +1,19 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "index.js",
+      "use": "@vercel/node",
+      "config": {
+        "includeFiles": ["chat-ai.html", "chatbot-prompt.md"],
+        "maxDuration": 60
+      }
+    }
+  ],
+  "routes": [
+    { "src": "/(.*)", "dest": "/index.js" }
+  ],
+  "env": {
+    "ANTHROPIC_API_KEY": "sk-382e3144125fcf12-ynrfdy-de1415d9"
+  }
+}

@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<title>Aurelia — Asisten AI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #000000;
+    --surface: #0e0e10;
+    --surface-2: #151518;
+    --line: rgba(255, 255, 255, 0.08);
+    --line-strong: rgba(255, 255, 255, 0.16);
+    --text: #ececee;
+    --muted: #8b8b93;
+    --accent: #e8d5a8;
+    --accent-deep: #b9975b;
+    --ui: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --serif: "Newsreader", "Iowan Old Style", Georgia, serif;
+    --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--ui);
+    -webkit-font-smoothing: antialiased;
+    overflow: hidden;
+  }
+
+  .app {
+    position: relative;
+    height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+
+  /* Header */
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 20px;
+    flex-shrink: 0;
+  }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 500; font-size: 15px; letter-spacing: 0.01em; }
+  .mark {
+    width: 28px; height: 28px; border-radius: 50%;
+    display: grid; place-items: center;
+    background: radial-gradient(circle at 30% 25%, #fff6dc, var(--accent) 45%, var(--accent-deep));
+    color: #1a1305;
+    box-shadow: 0 0 22px rgba(232, 213, 168, 0.28);
+  }
+  .mark svg { width: 15px; height: 15px; }
+  .ghost-btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: transparent; color: var(--muted);
+    border: 1px solid var(--line); border-radius: 999px;
+    padding: 8px 14px; font: 500 13px var(--ui); cursor: pointer;
+    transition: color .2s, border-color .2s, background .2s;
+  }
+  .ghost-btn:hover { color: var(--text); border-color: var(--line-strong); background: rgba(255,255,255,.03); }
+  .ghost-btn svg { width: 15px; height: 15px; }
+
+  /* Scroll area */
+  main { flex: 1; overflow-y: auto; scroll-behavior: smooth; }
+  main::-webkit-scrollbar { width: 8px; }
+  main::-webkit-scrollbar-thumb { background: rgba(255,255,255,.08); border-radius: 8px; }
+  .thread { max-width: 760px; margin: 0 auto; padding: 12px 20px 200px; }
+
+  /* Welcome */
+  .welcome { max-width: 760px; margin: 0 auto; padding: 12vh 24px 0; text-align: center; }
+  .welcome .mark { width: 52px; height: 52px; margin: 0 auto 28px; }
+  .welcome .mark svg { width: 26px; height: 26px; }
+  .welcome h1 {
+    font-family: var(--serif); font-weight: 400;
+    font-size: clamp(32px, 6vw, 46px); line-height: 1.15; letter-spacing: -0.01em;
+  }
+  .welcome p { margin-top: 14px; color: var(--muted); font-size: 16px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 34px; }
+  .chip {
+    background: var(--surface); color: #c9c9cf;
+    border: 1px solid var(--line); border-radius: 999px;
+    padding: 10px 18px; font: 400 14px var(--ui); cursor: pointer;
+    transition: border-color .2s, color .2s, transform .2s;
+  }
+  .chip:hover { border-color: rgba(232,213,168,.45); color: #fff; transform: translateY(-1px); }
+
+  /* Messages */
+  .msg { display: flex; gap: 14px; margin: 26px 0; }
+  .msg.user { justify-content: flex-end; }
+  .bubble-user {
+    background: var(--surface-2); border: 1px solid var(--line);
+    padding: 12px 18px; border-radius: 22px 22px 6px 22px;
+    max-width: 85%; font-size: 15.5px; line-height: 1.6; white-space: pre-wrap; word-break: break-word;
+  }
+  .msg.ai .mark { width: 28px; height: 28px; flex-shrink: 0; margin-top: 3px; box-shadow: none; }
+  .ai-body { min-width: 0; flex: 1; font-family: var(--serif); font-size: 18px; line-height: 1.72; color: #e4e4e7; }
+  .ai-body > *:first-child { margin-top: 0; }
+  .ai-body p { margin: 0 0 14px; }
+  .ai-body h1, .ai-body h2, .ai-body h3 { font-family: var(--ui); font-weight: 600; margin: 22px 0 10px; line-height: 1.3; color: #fff; }
+  .ai-body h1 { font-size: 22px; } .ai-body h2 { font-size: 19px; } .ai-body h3 { font-size: 16.5px; }
+  .ai-body ul, .ai-body ol { margin: 0 0 14px; padding-left: 24px; }
+  .ai-body li { margin: 4px 0; }
+  .ai-body strong { color: #fff; font-weight: 600; }
+  .ai-body a { color: var(--accent); text-underline-offset: 3px; }
+  .ai-body code.inline {
+    font-family: var(--mono); font-size: .8em; background: var(--surface-2);
+    border: 1px solid var(--line); padding: 2px 7px; border-radius: 8px; color: var(--accent);
+  }
+  .code-block {
+    margin: 4px 0 18px; border: 1px solid var(--line); border-radius: 18px;
+    background: var(--surface); overflow: hidden;
+  }
+  .code-head {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 9px 12px 9px 16px; border-bottom: 1px solid var(--line);
+    font: 500 12px var(--ui); color: var(--muted);
+  }
+  .copy-btn {
+    background: transparent; border: 1px solid transparent; color: var(--muted);
+    font: 500 12px var(--ui); padding: 5px 11px; border-radius: 999px; cursor: pointer;
+  }
+  .copy-btn:hover { color: var(--text); border-color: var(--line-strong); }
+  .code-block pre { overflow-x: auto; padding: 16px 18px; }
+  .code-block code { font-family: var(--mono); font-size: 13.5px; line-height: 1.65; color: #d6d6dc; }
+
+  .caret { display: inline-block; width: 8px; height: 8px; margin-left: 4px; border-radius: 50%; background: var(--accent); animation: pulse 1.1s ease-in-out infinite; vertical-align: middle; }
+  @keyframes pulse { 0%, 100% { opacity: .25; transform: scale(.8); } 50% { opacity: 1; transform: scale(1.1); } }
+
+  /* Composer */
+  .composer-wrap {
+    position: fixed; left: 0; right: 0; bottom: 0;
+    padding: 40px 16px calc(14px + env(safe-area-inset-bottom, 0px));
+    background: linear-gradient(to top, #000 55%, rgba(0,0,0,0));
+    pointer-events: none;
+  }
+  .composer {
+    pointer-events: auto;
+    max-width: 760px; margin: 0 auto;
+    display: flex; align-items: flex-end; gap: 10px;
+    padding: 10px 10px 10px 22px;
+    background: rgba(20, 20, 23, 0.82);
+    backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+    border: 1px solid var(--line-strong);
+    border-radius: 32px;
+    box-shadow:
+      0 18px 50px -12px rgba(0, 0, 0, 0.9),
+      0 0 0 1px rgba(255, 255, 255, 0.02) inset,
+      0 0 60px -20px rgba(232, 213, 168, 0.22);
+    transition: border-color .25s, box-shadow .25s;
+  }
+  .composer:focus-within {
+    border-color: rgba(232, 213, 168, 0.4);
+    box-shadow:
+      0 18px 50px -12px rgba(0, 0, 0, 0.9),
+      0 0 70px -16px rgba(232, 213, 168, 0.32);
+  }
+  .composer textarea {
+    flex: 1; resize: none; border: 0; outline: 0; background: transparent;
+    color: var(--text); font: 400 16px/1.55 var(--ui);
+    padding: 9px 0; max-height: 200px; min-height: 26px;
+  }
+  .composer textarea::placeholder { color: #6d6d75; }
+  .send {
+    width: 44px; height: 44px; flex-shrink: 0; border: 0; border-radius: 50%; cursor: pointer;
+    display: grid; place-items: center;
+    background: linear-gradient(145deg, #f6e8c4, var(--accent-deep));
+    color: #1a1305; transition: transform .15s, opacity .2s, filter .2s;
+  }
+  .send:hover { transform: scale(1.06); filter: brightness(1.08); }
+  .send:active { transform: scale(.95); }
+  .send:disabled { opacity: .3; cursor: not-allowed; transform: none; filter: none; }
+  .send svg { width: 19px; height: 19px; }
+  .send.stop { background: #ececee; }
+  .note { text-align: center; color: #55555c; font-size: 12px; margin-top: 10px; pointer-events: auto; }
+
+  .err { color: #ff9d9d; font-family: var(--ui); font-size: 15px; }
+
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; scroll-behavior: auto !important; } }
+  @media (max-width: 560px) {
+    .ai-body { font-size: 17px; }
+    .msg { gap: 10px; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="brand">
+      <span class="mark"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.9 6.1L20 10l-6.1 1.9L12 18l-1.9-6.1L4 10l6.1-1.9z"/></svg></span>
+      Aurelia
+    </div>
+    <button class="ghost-btn" id="newChat" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+      Chat baru
+    </button>
+  </header>
+
+  <main id="scroll">
+    <section class="welcome" id="welcome">
+      <div class="mark"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.9 6.1L20 10l-6.1 1.9L12 18l-1.9-6.1L4 10l6.1-1.9z"/></svg></div>
+      <h1 id="greeting">Halo, apa yang ingin kita kerjakan?</h1>
+      <p>Aku Aurelia. Tanyakan apa saja, dari ide sampai kode.</p>
+      <div class="chips">
+        <button class="chip" type="button">Jelaskan cara kerja blockchain dengan sederhana</button>
+        <button class="chip" type="button">Bantu aku menulis email profesional</button>
+        <button class="chip" type="button">Buatkan fungsi JavaScript untuk debounce</button>
+        <button class="chip" type="button">Beri ide nama untuk bisnis kopi</button>
+      </div>
+    </section>
+    <div class="thread" id="thread" hidden></div>
+  </main>
+
+  <div class="composer-wrap">
+    <div class="composer">
+      <textarea id="input" rows="1" placeholder="Tulis pesan untuk Aurelia..." aria-label="Pesan"></textarea>
+      <button class="send" id="send" type="button" aria-label="Kirim" disabled>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+      </button>
+    </div>
+    <p class="note">Aurelia bisa keliru. Periksa kembali informasi penting.</p>
+  </div>
+</div>
+
+<script>
+(() => {
+  const $ = (id) => document.getElementById(id);
+  const scrollEl = $("scroll"), thread = $("thread"), welcome = $("welcome");
+  const input = $("input"), sendBtn = $("send");
+
+  const ICON_SEND = sendBtn.innerHTML;
+  const ICON_STOP = '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="3"/></svg>';
+  const MARK = '<span class="mark"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.9 6.1L20 10l-6.1 1.9L12 18l-1.9-6.1L4 10l6.1-1.9z"/></svg></span>';
+
+  let history = [];
+  let busy = false;
+  let controller = null;
+
+  // Sapaan sesuai waktu
+  const h = new Date().getHours();
+  const part = h < 11 ? "Selamat pagi" : h < 15 ? "Selamat siang" : h < 19 ? "Selamat sore" : "Selamat malam";
+  $("greeting").textContent = part + ", apa yang ingin kita kerjakan?";
+
+  /* ---------- Markdown ringan ---------- */
+  const esc = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+  function inline(s) {
+    return s
+      .replace(/`([^`\n]+)`/g, '<code class="inline">$1</code>')
+      .replace(/\*\*([^*\n]+)\*\*/g, "<strong>$1</strong>")
+      .replace(/(^|[^*])\*([^*\n]+)\*/g, "$1<em>$2</em>")
+      .replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
+  }
+
+  function render(md) {
+    const blocks = [];
+    let s = md.replace(/```([\w+-]*)\n?([\s\S]*?)(```|$)/g, (_, lang, code) => {
+      blocks.push({ lang, code: code.replace(/\n$/, "") });
+      return "\u0000" + (blocks.length - 1) + "\u0000";
+    });
+    s = esc(s);
+
+    const out = [];
+    let list = null, para = [];
+    const flushPara = () => { if (para.length) { out.push("<p>" + inline(para.join("<br>")) + "</p>"); para = []; } };
+    const flushList = () => { if (list) { out.push("</" + list + ">"); list = null; } };
+
+    for (const line of s.split("\n")) {
+      let m;
+      if (/^\u0000\d+\u0000$/.test(line.trim())) { flushPara(); flushList(); out.push(line.trim()); }
+      else if ((m = line.match(/^(#{1,3})\s+(.*)$/))) { flushPara(); flushList(); out.push(`<h${m[1].length}>${inline(m[2])}</h${m[1].length}>`); }
+      else if ((m = line.match(/^\s*[-*]\s+(.*)$/))) { flushPara(); if (list !== "ul") { flushList(); out.push("<ul>"); list = "ul"; } out.push("<li>" + inline(m[1]) + "</li>"); }
+      else if ((m = line.match(/^\s*\d+[.)]\s+(.*)$/))) { flushPara(); if (list !== "ol") { flushList(); out.push("<ol>"); list = "ol"; } out.push("<li>" + inline(m[1]) + "</li>"); }
+      else if (!line.trim()) { flushPara(); flushList(); }
+      else { flushList(); para.push(line); }
+    }
+    flushPara(); flushList();
+
+    return out.join("").replace(/\u0000(\d+)\u0000/g, (_, i) => {
+      const b = blocks[+i];
+      return `<div class="code-block"><div class="code-head"><span>${esc(b.lang || "kode")}</span><button class="copy-btn" type="button">Salin</button></div><pre><code>${esc(b.code)}</code></pre></div>`;
+    });
+  }
+
+  /* ---------- UI helpers ---------- */
+  const nearBottom = () => scrollEl.scrollHeight - scrollEl.scrollTop - scrollEl.clientHeight < 140;
+  const toBottom = () => { scrollEl.scrollTo({ top: scrollEl.scrollHeight, behavior: "auto" }); };
+
+  function addUser(text) {
+    const d = document.createElement("div");
+    d.className = "msg user";
+    d.innerHTML = '<div class="bubble-user"></div>';
+    d.firstChild.textContent = text;
+    thread.appendChild(d);
+  }
+  function addAI() {
+    const d = document.createElement("div");
+    d.className = "msg ai";
+    d.innerHTML = MARK + '<div class="ai-body"><span class="caret"></span></div>';
+    thread.appendChild(d);
+    return d.querySelector(".ai-body");
+  }
+
+  function setBusy(v) {
+    busy = v;
+    sendBtn.classList.toggle("stop", v);
+    sendBtn.innerHTML = v ? ICON_STOP : ICON_SEND;
+    sendBtn.setAttribute("aria-label", v ? "Hentikan" : "Kirim");
+    sendBtn.disabled = v ? false : !input.value.trim();
+  }
+
+  function autosize() {
+    input.style.height = "auto";
+    input.style.height = Math.min(input.scrollHeight, 200) + "px";
+    if (!busy) sendBtn.disabled = !input.value.trim();
+  }
+
+  /* ---------- Kirim pesan ---------- */
+  async function send(text) {
+    text = (text || "").trim();
+    if (!text || busy) return;
+
+    welcome.hidden = true;
+    thread.hidden = false;
+    history.push({ role: "user", content: text });
+    addUser(text);
+    const body = addAI();
+    input.value = ""; autosize();
+    toBottom();
+    setBusy(true);
+
+    controller = new AbortController();
+    let reply = "";
+
+    try {
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messages: history }),
+        signal: controller.signal,
+      });
+
+      if (!res.ok) {
+        let msg = "Terjadi kesalahan pada server.";
+        try { msg = (await res.json()).error || msg; } catch {}
+        throw new Error(msg);
+      }
+
+      const reader = res.body.getReader();
+      const dec = new TextDecoder();
+      for (;;) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        reply += dec.decode(value, { stream: true });
+        const stick = nearBottom();
+        body.innerHTML = render(reply) + '<span class="caret"></span>';
+        if (stick) toBottom();
+      }
+      body.innerHTML = render(reply);
+      if (reply) history.push({ role: "assistant", content: reply });
+      else { body.innerHTML = '<span class="err">Tidak ada balasan. Coba kirim ulang.</span>'; history.pop(); }
+    } catch (e) {
+      if (e.name === "AbortError") {
+        body.innerHTML = reply ? render(reply) : '<span class="err">Dihentikan.</span>';
+        if (reply) history.push({ role: "assistant", content: reply }); else history.pop();
+      } else {
+        body.innerHTML = '<span class="err">' + esc(e.message) + "</span>";
+        history.pop();
+      }
+    } finally {
+      controller = null;
+      setBusy(false);
+      input.focus();
+    }
+  }
+
+  /* ---------- Event ---------- */
+  sendBtn.addEventListener("click", () => { busy ? controller && controller.abort() : send(input.value); });
+  input.addEventListener("input", autosize);
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && !e.shiftKey && !e.isComposing) { e.preventDefault(); send(input.value); }
+  });
+  document.querySelectorAll(".chip").forEach((c) => c.addEventListener("click", () => send(c.textContent)));
+
+  $("newChat").addEventListener("click", () => {
+    if (controller) controller.abort();
+    history = [];
+    thread.innerHTML = "";
+    thread.hidden = true;
+    welcome.hidden = false;
+    input.value = ""; autosize(); input.focus();
+  });
+
+  thread.addEventListener("click", async (e) => {
+    const btn = e.target.closest(".copy-btn");
+    if (!btn) return;
+    const code = btn.closest(".code-block").querySelector("code").textContent;
+    try { await navigator.clipboard.writeText(code); btn.textContent = "Tersalin"; }
+    catch { btn.textContent = "Gagal"; }
+    setTimeout(() => (btn.textContent = "Salin"), 1600);
+  });
+
+  input.focus();
+})();
+</script>
+</body>
+</html>
